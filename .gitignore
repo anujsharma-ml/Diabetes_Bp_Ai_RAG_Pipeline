@@ -1,0 +1,10 @@
+config.py
+.env
+rag1_db
+database
+
+.sqlite3
+
+__pycache__/
+venv/
+env/
