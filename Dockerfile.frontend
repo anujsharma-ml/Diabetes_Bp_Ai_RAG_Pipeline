@@ -1,0 +1,15 @@
+# 1. Base image
+FROM python:3.10-slim
+
+# 2. Working directory
+WORKDIR /app
+
+# 3. Dependencies install
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# 4. Frontend code copy
+COPY frontend.py ./
+
+# 5. commands to start the Streamlit app 
+CMD ["sh", "-c", "streamlit run frontend.py --server.port=${PORT:-8501} --server.address=0.0.0.0"]

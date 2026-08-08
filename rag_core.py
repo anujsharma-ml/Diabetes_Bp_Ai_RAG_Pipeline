@@ -1,10 +1,12 @@
 import os
+import numpy as np
 import chromadb
 import uuid
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer
+from sentence_transformers import SentenceTransformer,CrossEncoder
 import config
+from rank_bm25 import BM25Okapi
 
 # --- 1. File Loader ---
 def file_loader(files):
@@ -53,10 +55,19 @@ def chunks_splitter(documents, chunk_size=1000, chunk_overlap=200):
 
 # --- 3. RagPipeline Class ---
 class RagPipeline:
-    def __init__(self, drive_path=config.databas_path):
+    def __init__(self, drive_path=config.database_path):
         self.client = chromadb.PersistentClient(path=drive_path)
         self.collection = self.client.get_or_create_collection(name="collection")
         self.embedding_model = SentenceTransformer(config.Embedding_model)
+
+
+        all_data = self.collection.get(include=['documents'])
+        self.all_documents = all_data['documents'] if all_data['documents'] else []
+        tokenized_docs = [doc.lower().split() for doc in self.all_documents]
+        self.bm25 = BM25Okapi(tokenized_docs) if tokenized_docs else None
+        
+        
+        self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 
     def add_documents(self, chunks):
         ids = []
@@ -86,6 +97,8 @@ class RagPipeline:
         except Exception as e:
             print(f"Adding data to collection error: {e}")
 
+
+
     def get_relevant_documents(self, query, top_k=3):
         try:
             query_vector = self.embedding_model.encode(query).tolist()
@@ -103,3 +116,38 @@ class RagPipeline:
         except Exception as e:
             print(f"Error getting the relevant documents {e}")
             return []
+        
+
+    def hybrid_search(self, query, top_k=3):
+            vector_docs = self.get_relevant_documents(query, top_k=top_k)
+    
+            combined_docs = vector_docs.copy()
+    
+            try:
+                bm25_docs = []
+                if self.bm25 and self.all_documents:
+                 tokenized_query = query.lower().split()
+                 scores = self.bm25.get_scores(tokenized_query)
+                 top_indices = np.argsort(scores)[::-1][:top_k]
+                 bm25_docs = [self.all_documents[i] for i in top_indices if scores[i] > 0]
+                 combined_docs = list(dict.fromkeys(vector_docs + bm25_docs))
+            except Exception as e:
+                print(f"Error in hybrid search {e}")
+                return vector_docs
+    
+            try:
+                if combined_docs:
+                    pair = [[query,doc] for doc in combined_docs]
+    
+                    rerank_score = self.reranker.predict(pair)
+    
+                    scored_docs = sorted(zip(combined_docs,rerank_score),key=lambda x: x[1],reverse=True)
+    
+                    final_docs = [doc for doc,score in scored_docs]
+    
+                    return final_docs[:top_k]
+            except Exception as e:
+                print(f"Error in re-ranking is {e}")
+                return combined_docs[:top_k]
+    
+    

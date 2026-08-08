@@ -1,0 +1,28 @@
+
+# -------python installation for our containor --------
+
+FROM python:3.10-slim   
+
+# --------creating WORKDIR app on that containor --------
+
+WORKDIR /app       
+
+#--------copy requirements txt to our workdir app----------
+
+COPY requirements.txt . 
+
+# -----installing all package from requirements file ------
+
+RUN pip install --no-cache-dir -r requirements.txt   
+
+# ------- copy the 3 files from our local system ----------
+
+COPY backend.py rag_core.py config.py ./   
+
+#-------- Transffering the data file of local system into workdir data folder -------
+
+COPY data/ ./data/
+
+# -------- all command to run backend ----------
+
+CMD ["sh", "-c", "uvicorn backend:app --host 0.0.0.0 --port ${PORT:-8000}"]
