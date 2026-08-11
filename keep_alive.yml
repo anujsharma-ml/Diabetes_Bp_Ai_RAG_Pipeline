@@ -1,0 +1,15 @@
+name: Keep Alive Backend
+
+on:
+  schedule:
+    - cron: '*/5 * * * *' # Har 5 minute me ping karega
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pinging Render Backend
+        run: |
+          curl -s https://diabetes-bp-ai-rag-pipeline.onrender.com > /dev/null
+          echo "Backend pinged successfully!"
