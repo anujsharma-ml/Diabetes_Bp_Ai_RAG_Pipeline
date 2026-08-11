@@ -4,360 +4,316 @@ import os
 
 # --- Page Configuration ---
 st.set_page_config(
-    page_title="Medi-Pulse AI Assistant",
-    page_icon="💊",
+    page_title="MediPulse AI | Clinical Intelligence",
+    page_icon="🩺",
     layout="centered",
     initial_sidebar_state="collapsed"
 )
 
-# --- Custom CSS for Premium Medical SaaS Appearance ---
+# --- Elite Recruiter-Winning CSS (Compact Vercel / Linear Aesthetic) ---
 st.markdown("""
     <style>
-        /* Hide Streamlit Default Header, Footer, and Menu */
+        /* Hide Default Streamlit Elements */
         #MainMenu {visibility: hidden;}
         header {visibility: hidden;}
         footer {visibility: hidden;}
 
-        /* Rich Dark Medical Background System */
+        /* Matte Obsidian Vercel Theme */
         .stApp {
-            background: #07111F;
-            color: #F8FAFC;
-            font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: #09090B;
+            color: #F4F4F5;
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        /* Sticky Glassmorphism Header */
-        .header-container {
-            position: sticky;
-            top: 0;
-            z-index: 999;
-            background: rgba(11, 23, 38, 0.85);
-            backdrop-filter: blur(14px);
-            -webkit-backdrop-filter: blur(14px);
-            padding: 16px 20px;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-            border-radius: 0 0 20px 20px;
+        /* Compact Top Workspace Navbar */
+        .workspace-header {
+            background: rgba(17, 17, 19, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 12px 20px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
-            margin-bottom: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
         }
 
-        .header-left {
+        .header-brand {
             display: flex;
             align-items: center;
-            gap: 14px;
+            gap: 10px;
         }
 
-        /* SVG Medical AI Logo Badge */
-        .logo-badge {
+        .brand-icon {
+            width: 34px;
+            height: 34px;
+            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
+            border-radius: 9px;
             display: flex;
             align-items: center;
             justify-content: center;
-            background: linear-gradient(135deg, #10B981 0%, #0284C7 100%);
-            width: 46px;
-            height: 46px;
-            border-radius: 16px;
-            box-shadow: 0 0 16px rgba(16, 185, 129, 0.3);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
         }
 
-        .header-title-wrapper h1 {
-            font-size: 1.25rem !important;
-            font-weight: 700 !important;
-            color: #F8FAFC !important;
-            margin: 0px !important;
-            letter-spacing: -0.3px;
+        .brand-text h2 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: #FAFAFA;
+            margin: 0;
+            letter-spacing: -0.2px;
         }
 
-        .header-title-wrapper p {
-            color: #94A3B8;
-            font-size: 0.8rem !important;
-            margin: 0px !important;
-            font-weight: 400 !important;
+        .brand-text p {
+            font-size: 0.7rem;
+            color: #A1A1AA;
+            margin: 0;
         }
 
-        /* Professional Online Status Indicator */
+        /* Live Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
             background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.2);
-            padding: 6px 14px;
-            border-radius: 30px;
-            font-size: 0.75rem;
-            color: #10B981;
+            border: 1px solid rgba(16, 185, 129, 0.25);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.72rem;
+            color: #34D399;
             font-weight: 500;
         }
 
         .status-dot {
-            width: 8px;
-            height: 8px;
-            background-color: #10B981;
+            width: 5px;
+            height: 5px;
+            background-color: #34D399;
             border-radius: 50%;
-            box-shadow: 0 0 8px #10B981;
-            animation: pulse-glow 2s infinite;
+            box-shadow: 0 0 6px #34D399;
+            animation: pulse 2s infinite;
         }
 
-        @keyframes pulse-glow {
+        @keyframes pulse {
             0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 0 12px #10B981; }
+            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px #34D399; }
             100% { transform: scale(0.95); opacity: 0.8; }
         }
 
-        /* Empty State Welcome Screen */
-        .welcome-container {
+        /* Compact Welcome Hero Card */
+        .dashboard-welcome {
+            background: linear-gradient(145deg, rgba(24, 24, 27, 0.7) 0%, rgba(17, 17, 19, 0.9) 100%);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 14px;
+            padding: 24px 20px;
             text-align: center;
-            padding: 24px 20px 14px 20px;
-            max-width: 600px;
-            margin: 0 auto;
-            background: rgba(16, 28, 45, 0.5);
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            border-radius: 24px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-            margin-bottom: 20px;
-        }
-
-        .welcome-logo {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(135deg, #10B981 0%, #38BDF8 100%);
-            width: 64px;
-            height: 64px;
-            border-radius: 20px;
-            box-shadow: 0 8px 24px rgba(16, 185, 129, 0.25);
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
             margin-bottom: 16px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .welcome-title {
-            font-size: 1.6rem;
+        .dashboard-welcome h1 {
+            font-size: 1.35rem;
             font-weight: 700;
-            color: #F8FAFC;
-            margin-bottom: 8px;
+            color: #FAFAFA;
+            margin-bottom: 6px;
         }
 
-        .welcome-subtitle {
-            font-size: 0.9rem;
-            color: #94A3B8;
-            line-height: 1.5;
-            margin-bottom: 10px;
+        .dashboard-welcome p {
+            font-size: 0.85rem;
+            color: #A1A1AA;
+            max-width: 500px;
+            margin: 0 auto;
+            line-height: 1.4;
         }
 
-        /* Curved Suggestion Buttons */
+        /* Suggestion Grid Buttons */
         div.stButton > button {
-            border-radius: 16px !important;
-            border: 1px solid rgba(56, 189, 248, 0.2) !important;
-            background: rgba(16, 28, 45, 0.8) !important;
-            color: #E2E8F0 !important;
-            padding: 12px 16px !important;
-            transition: all 0.3s ease !important;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+            border-radius: 10px !important;
+            border: 1px solid rgba(255, 255, 255, 0.08) !important;
+            background: #18181B !important;
+            color: #D4D4D8 !important;
+            padding: 10px 14px !important;
+            font-size: 0.82rem !important;
+            transition: all 0.2s ease !important;
         }
 
         div.stButton > button:hover {
-            border-color: #10B981 !important;
-            background: rgba(16, 185, 129, 0.15) !important;
+            border-color: #8B5CF6 !important;
+            background: rgba(139, 92, 246, 0.12) !important;
             color: #FFFFFF !important;
-            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25) !important;
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
-        /* General Chat Text Adjustments */
-        .stMarkdown p, .stMarkdown {
-            font-size: 1rem !important;
-            line-height: 1.6 !important;
-        }
-
-        /* User Message Styling (Curved Right Bubble) */
+        /* Chat Message Bubbles */
         .stChatMessage[data-testid="stChatMessage-user"] {
-            background: linear-gradient(135deg, #10B981 0%, #0284C7 100%) !important;
-            border-radius: 20px 20px 4px 20px !important;
-            padding: 14px 18px;
+            background: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%) !important;
+            border-radius: 12px 12px 4px 12px !important;
+            padding: 12px 16px;
             color: #FFFFFF !important;
-            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
             max-width: 75%;
             margin-left: auto !important;
-            margin-right: 0 !important;
-            direction: ltr;
+            border: 1px solid rgba(255, 255, 255, 0.15);
         }
         
-        .stChatMessage[data-testid="stChatMessage-user"] p {
+        .stChatMessage[data-testid="stChatMessage-user"] p,
+        .stChatMessage[data-testid="stChatMessage-user"] span {
             color: #FFFFFF !important;
         }
 
-        /* Assistant Message Styling (Curved Left Slate Card) */
         .stChatMessage[data-testid="stChatMessage-assistant"] {
-            background: #101C2D !important;
-            border-radius: 20px 20px 20px 4px !important;
-            padding: 18px;
-            color: #F8FAFC !important;
-            border: 1px solid rgba(56, 189, 248, 0.25);
-            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+            background: #121215 !important;
+            border-radius: 12px 12px 12px 4px !important;
+            padding: 16px !important;
+            color: #F4F4F5 !important;
+            border: 1px solid rgba(139, 92, 246, 0.25) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
             max-width: 80%;
             margin-right: auto !important;
-            margin-left: 0 !important;
         }
         
-        .stChatMessage[data-testid="stChatMessage-assistant"] p {
-            color: #F8FAFC !important;
-            font-weight: 400;
+        .stChatMessage[data-testid="stChatMessage-assistant"] p,
+        .stChatMessage[data-testid="stChatMessage-assistant"] li,
+        .stChatMessage[data-testid="stChatMessage-assistant"] span {
+            color: #E4E4E7 !important;
+            font-size: 0.92rem !important;
+            line-height: 1.5 !important;
         }
 
-        /* Custom Medical Spinner Styling */
-        .stSpinner > div {
-            border-top-color: #10B981 !important;
-        }
-
-        /* High-Contrast Curved Chat Input Box & Removing Default Streamlit Lines */
+        /* Chat Input Box Styling */
         div[data-testid="stChatInputContainer"] {
-            background-color: transparent !important;
-            padding-bottom: 16px;
-            max-width: 780px;
-            margin: 0 auto;
-            border: none !important;
-        }
-
-        div[data-testid="stChatInputContainer"] > div {
-            border: none !important;
-            box-shadow: none !important;
+            background: #09090B !important;
+            padding-bottom: 10px !important;
+            max-width: 780px !important;
+            margin: 0 auto !important;
         }
 
         div[data-testid="stChatInput"] {
-            border-radius: 24px !important;
-            border: 1.5px solid rgba(16, 185, 129, 0.4) !important;
-            background-color: #0B1726 !important;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4) !important;
-            transition: all 0.3s ease;
-            padding: 4px 8px;
-            outline: none !important;
+            background-color: #121215 !important;
+            border-radius: 12px !important;
+            border: 1px solid rgba(139, 92, 246, 0.4) !important;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
+            padding: 2px 6px !important;
+            transition: all 0.3s ease !important;
         }
 
         div[data-testid="stChatInput"]:focus-within {
-            border-color: #00F2FE !important;
-            box-shadow: 0 0 22px rgba(0, 242, 254, 0.3) !important;
-            outline: none !important;
+            border-color: #8B5CF6 !important;
+            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25), 0 6px 24px rgba(0, 0, 0, 0.7) !important;
         }
 
         div[data-testid="stChatInput"] textarea {
-            color: #F8FAFC !important;
-            font-size: 0.95rem !important;
+            color: #F4F4F5 !important;
+            font-size: 0.92rem !important;
+            background: transparent !important;
             border: none !important;
             outline: none !important;
             box-shadow: none !important;
         }
 
         div[data-testid="stChatInput"] textarea::placeholder {
-            color: #94A3B8 !important;
+            color: #71717A !important;
+        }
+
+        div[data-testid="stChatInput"] button {
+            background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
+            border: none !important;
+            border-radius: 8px !important;
+            color: #FFFFFF !important;
+            transition: all 0.2s ease !important;
+        }
+
+        div[data-testid="stChatInput"] button:hover {
+            opacity: 0.9 !important;
+            transform: scale(1.05);
         }
 
         /* Professional Footer Section */
         .app-footer {
             text-align: center;
-            padding: 24px 20px;
-            font-size: 0.78rem;
-            color: #94A3B8;
-            border-top: 1px solid rgba(255, 255, 255, 0.06);
-            margin-top: 50px;
-            line-height: 1.5;
-        }
-
-        /* Responsive Fixes for Mobile */
-        @media (max-width: 640px) {
-            .stChatMessage[data-testid="stChatMessage-user"],
-            .stChatMessage[data-testid="stChatMessage-assistant"] {
-                max-width: 90%;
-            }
+            padding: 16px 12px;
+            font-size: 0.75rem;
+            color: #71717A;
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            margin-top: 30px;
+            line-height: 1.4;
         }
     </style>
-""", unsafe_allow_html=True)
-
-# --- Header Section with Custom Medical AI Logo & Status ---
-st.markdown("""
-    <div class="header-container">
-        <div class="header-left">
-            <div class="logo-badge">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2V22M2 12H22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
-                    <path d="M4 12H8L10 7L14 17L16 12H20" stroke="#38BDF8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-            </div>
-            <div class="header-title-wrapper">
-                <h1>MEDI-PULSE AI</h1>
-                <p>Intelligent Clinical Assistant</p>
-            </div>
-        </div>
-        <div class="status-badge">
-            <div class="status-dot"></div>
-            <span>AI Online</span>
-        </div>
-    </div>
 """, unsafe_allow_html=True)
 
 # --- Backend API Connection Configuration ---
 BACKEND_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-# --- SVG Icons for Chat Avatars ---
-USER_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2'></path><circle cx='12' cy='7' r='4'></circle></svg>"
-
-# Premium Doctor AI Avatar with Medical Cross (Electric Cyan #00F2FE)
-DOCTOR_AI_AVATAR_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300F2FE' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><path d='M16 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2'/><circle cx='10' cy='7' r='4'/><path d='M19 8v6'/><path d='M16 11h6'/></svg>"
+# --- Custom Image URLs (Icons provided by user) ---
+USER_AVATAR_URL = "https://img.icons8.com/?size=100&id=EllnQXZglUAE&format=png&color=000000"
+DOCTOR_AI_AVATAR_URL = "https://img.icons8.com/?size=100&id=DHJCUP779OXh&format=png&color=000000"
 
 # --- Session State Initialization ---
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Empty State Welcome Screen (Shown only when chat is empty) ---
-if len(st.session_state.messages) == 0:
-    st.markdown("""
-        <div class="welcome-container">
-            <div class="welcome-logo">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M12 2V22M2 12H22" stroke="white" stroke-width="2.5" stroke-linecap="round"/>
+# --- Main Workspace Navbar ---
+st.markdown("""
+    <div class="workspace-header">
+        <div class="header-brand">
+            <div class="brand-icon">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19.5 13.5C19.5 17.6421 16.1421 21 12 21C7.85786 21 4.5 17.6421 4.5 13.5C4.5 9.35786 7.85786 6 12 6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M12 2V6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                    <path d="M9 13.5H11L12.5 10.5L14 16.5L15.5 13.5H17.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    <circle cx="12" cy="2" r="1.5" fill="white"/>
                 </svg>
             </div>
-            <div class="welcome-title">How can I help you today?</div>
-            <div class="welcome-subtitle">
-                Ask Medi-Pulse AI about diabetes, hypertension, medications, nutrition, lifestyle, or general clinical health information.
+            <div class="brand-text">
+                <h2>MediPulse AI</h2>
+                <p>Clinical Intelligence Assistant</p>
             </div>
+        </div>
+        <div class="status-badge">
+            <div class="status-dot"></div>
+            <span>Online</span>
+        </div>
+    </div>
+""", unsafe_allow_html=True)
+
+# --- Welcome Dashboard ---
+if len(st.session_state.messages) == 0:
+    st.markdown("""
+        <div class="dashboard-welcome">
+            <h1>Clinical Intelligence at Your Fingertips</h1>
+            <p>Query evidence-based medical protocols, diagnostic threshold ranges, and clinical guidelines instantly.</p>
         </div>
     """, unsafe_allow_html=True)
     
-    # Fully interactive suggestion buttons using proper Streamlit logic
     col1, col2 = st.columns(2)
     with col1:
-        if st.button("🩺 Explain HbA1c ranges", use_container_width=True):
-            st.session_state.pending_query = "Explain HbA1c ranges"
+        if st.button("🩺 Explain HbA1c threshold ranges", use_container_width=True):
+            st.session_state.pending_query = "Explain HbA1c threshold ranges"
             st.rerun()
-        if st.button("🥗 Diabetes-friendly diet tips", use_container_width=True):
-            st.session_state.pending_query = "Give me some diabetes-friendly diet tips"
+        if st.button("🥗 Evidence-based diabetic nutrition", use_container_width=True):
+            st.session_state.pending_query = "Give me some evidence-based diabetic nutrition tips"
             st.rerun()
     with col2:
-        if st.button("❤️ Blood pressure guidelines", use_container_width=True):
+        if st.button("❤️ Standard blood pressure guidelines", use_container_width=True):
             st.session_state.pending_query = "What are the standard blood pressure guidelines?"
             st.rerun()
-        if st.button("🏃‍♂️ Hypertension lifestyle habits", use_container_width=True):
+        if st.button("🏃‍♂️ Hypertension lifestyle modifications", use_container_width=True):
             st.session_state.pending_query = "What lifestyle changes help manage hypertension?"
             st.rerun()
 
-# --- Render Chat History with Custom Professional Avatars ---
+# --- Render Chat History ---
 for message in st.session_state.messages:
     role = message["role"]
-    
     if role == "user":
-        with st.chat_message(role, avatar=USER_AVATAR_SVG):
+        with st.chat_message(role, avatar=USER_AVATAR_URL):
             st.markdown(message["content"])
     else:
-        with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_SVG):
+        with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
             st.markdown(message["content"])
 
-# --- Handle Query Processing (from Chat Input or Clickable Suggestion Buttons) ---
-chat_input_query = st.chat_input("Ask Medi-Pulse AI a health question...")
+# --- Handle Query Input & API Request with Spinner -> AI Avatar Transition ---
+chat_input_query = st.chat_input("Consult MediPulse AI...")
 
-# Check if a suggestion button was clicked or text was typed into the chat input
 query = None
 if chat_input_query:
     query = chat_input_query
@@ -366,12 +322,10 @@ elif "pending_query" in st.session_state and st.session_state.pending_query:
     del st.session_state.pending_query
 
 if query:
-    # 1. Append & Display User Message
     st.session_state.messages.append({"role": "user", "content": query})
-    with st.chat_message("user", avatar=USER_AVATAR_SVG):
+    with st.chat_message("user", avatar=USER_AVATAR_URL):
         st.markdown(query)
 
-    # 2. Prepare Payload matching your exact FastAPI contract
     payload_history = [
         {"role": m["role"], "content": m["content"]}
         for m in st.session_state.messages[:-1]
@@ -382,37 +336,45 @@ if query:
         "history": payload_history
     }
 
-    # 3. Call FastAPI Backend endpoint: {BACKEND_URL}/chat via POST
     try:
-        with st.spinner("Analyzing clinical data vectors..."):
-            response = requests.post(f"{BACKEND_URL}/chat", json=payload, timeout=30)
+        # Step 1: Show Spinner while waiting for initial response connection/tokens
+        with st.spinner("Synthesizing clinical insights..."):
+            response = requests.post(f"{BACKEND_URL}/chat", json=payload, stream=True, timeout=60)
 
         if response.status_code == 200:
-            data = response.json()
-            answer = data.get("answer") if isinstance(data, dict) else str(data)
-            if not answer:
-                answer = "Received an empty response structure from clinical server."
+            # Step 2: Once connection is active, render with the AI Avatar and stream text chunk-by-chunk
+            with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
+                def generate_stream():
+                    for chunk in response.iter_content(chunk_size=512, decode_unicode=True):
+                        if chunk:
+                            yield chunk
+
+                answer = st.write_stream(generate_stream())
         else:
             answer = f"**System Notice:** Clinical gateway returned status code `{response.status_code}`."
+            with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
+                st.markdown(answer)
 
     except requests.exceptions.ConnectionError:
-        answer = f"**Connection Error:** Unable to reach the Medi-Pulse AI backend server at `{BACKEND_URL}/chat`. Please ensure FastAPI is running."
+        answer = f"**Connection Error:** Unable to reach the backend server at `{BACKEND_URL}/chat`."
+        with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
+            st.error(answer)
     except requests.exceptions.Timeout:
         answer = "**Timeout Error:** The clinical request took too long to process. Please try again."
+        with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
+            st.error(answer)
     except Exception as e:
-        answer = f"**System Error:** An unexpected error occurred while communicating with the server: {e}"
-
-    # 4. Append & Display Assistant Response
-    with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_SVG):
-        st.markdown(answer)
+        answer = f"**System Error:** {e}"
+        with st.chat_message("assistant", avatar=DOCTOR_AI_AVATAR_URL):
+            st.error(answer)
 
     st.session_state.messages.append({"role": "assistant", "content": answer})
     st.rerun()
 
-# --- Footer Section ---
+# --- Professional Footer Section ---
 st.markdown("""
     <div class="app-footer">
-        <p>⚠️ <b>Medi-Pulse AI</b> provides informational support and does not replace professional medical advice.<br>
-        © 2026 Medi-Pulse AI. All rights reserved.</p>
+        <p>⚠️ <b>MediPulse AI</b> provides clinical decision support and is not a substitute for professional medical diagnosis.<br>
+        © 2026 MediPulse AI. All rights reserved.</p>
     </div>
 """, unsafe_allow_html=True)
