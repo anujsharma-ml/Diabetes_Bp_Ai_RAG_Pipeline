@@ -9,6 +9,6 @@ Gemini_api_key = os.getenv("GEMINI_API_KEY")
 
 file_path = ["./data/diabetes.pdf","./data/hypertension.pdf"]
 
-Groq_model = "llama-3.3-70b-versatile"
+Groq_model = "llama-3.1-8b-instant"
 
 Embedding_model = "gemini-embedding-2"
