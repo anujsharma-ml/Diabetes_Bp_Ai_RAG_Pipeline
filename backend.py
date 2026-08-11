@@ -12,23 +12,47 @@ app = FastAPI(title="Dibetes and bp helpfull ai assistance",debug=True)
 
 #------  rag_pipeline -----------
 
-print("Intializing the Rag Pipeline...")
+
+print("Intializing and syncing the Rag Pipeline...")
 
 rag_pipeline = RagPipeline()  
 try:
+    data_folder = "./data"
+    if os.path.exists(data_folder):
+    
+        all_files = [
+            os.path.join(data_folder, f) 
+            for f in os.listdir(data_folder) 
+            if f.endswith((".pdf", ".txt", ".docx", ".doc"))
+        ]
+        
+        existing_sources = set()
+        records, _ = rag_pipeline.qdrant.scroll(
+            collection_name=rag_pipeline.collection_name,
+            with_payload=["source"],
+            limit=10000
+        )
+        for r in records:
+            if r.payload and "source" in r.payload:
+                existing_sources.add(r.payload["source"])
 
-    if rag_pipeline.collection.count()==0:
-        print("The Database is empty  loading files on it..")
+  
+        new_files = [
+            f for f in all_files 
+            if f not in existing_sources and f.replace("\\", "/") not in existing_sources
+        ]
 
-        documents = file_loader(config.file_path)
-        all_chunks = chunks_splitter(documents)
-        rag_pipeline.add_documents(all_chunks)
-
-    else:
-        print("The database is already filled...")
+        if new_files:
+            print(f"Found new files to add: {new_files}")
+            documents = file_loader(new_files)
+            if documents:
+                all_chunks = chunks_splitter(documents)
+                rag_pipeline.add_documents(all_chunks)
+        else:
+            print("Database is already up to date. No new files found.")
+            
 except Exception as e:
-    print(f"The exception is in loading the rag_pipeline {e}")
-
+    print(f"The exception is in syncing the rag_pipeline: {e}")
 
 
 #--------  LLM architecture ----------

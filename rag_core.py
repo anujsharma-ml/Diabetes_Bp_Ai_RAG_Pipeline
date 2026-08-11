@@ -1,14 +1,19 @@
 import os
-import numpy as np
-import chromadb
+import config
 import uuid
+import time
+import numpy as np
 from langchain_community.document_loaders import PyPDFLoader, TextLoader, Docx2txtLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from sentence_transformers import SentenceTransformer,CrossEncoder
-import config
-from rank_bm25 import BM25Okapi
+from google import genai  
+from qdrant_client import QdrantClient  
+from qdrant_client.http.models import Distance, VectorParams, PointStruct  
+from rank_bm25 import BM25Okapi  
 
-# --- 1. File Loader ---
+
+gemini_client = genai.Client(api_key=config.Gemini_api_key ) #gemini client for embedding
+
+# ------------------------------------------ 1. File Loader -----------------------------------------------
 def file_loader(files):
     all_docs = []
     for path in files:
@@ -36,8 +41,9 @@ def file_loader(files):
 
 
 
-# --- 2. Chunks Splitter ---
-def chunks_splitter(documents, chunk_size=1000, chunk_overlap=200):
+# --- -------------------------------------2. Chunks Splitter ---------------------------------------------------
+
+def chunks_splitter(documents, chunk_size=3000, chunk_overlap=300):
     try:
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
@@ -53,101 +59,159 @@ def chunks_splitter(documents, chunk_size=1000, chunk_overlap=200):
 
 
 
-# --- 3. RagPipeline Class ---
+# ----------------------------------------------------- 3. RagPipeline Class -------------------------------------------
 class RagPipeline:
-    def __init__(self, drive_path=config.database_path):
-        self.client = chromadb.PersistentClient(path=drive_path)
-        self.collection = self.client.get_or_create_collection(name="collection")
-        self.embedding_model = SentenceTransformer(config.Embedding_model)
+    def __init__(self,):
+        self.qdrant = QdrantClient(
+            url=config.Qdrant_url,
+            api_key=config.Qdrant_api_key
+        )
+        self.collection_name = "medipulse_docs"
 
-
-        all_data = self.collection.get(include=['documents'])
-        self.all_documents = all_data['documents'] if all_data['documents'] else []
-        tokenized_docs = [doc.lower().split() for doc in self.all_documents]
-        self.bm25 = BM25Okapi(tokenized_docs) if tokenized_docs else None
+        if not self.qdrant.collection_exists(self.collection_name):
+            self.qdrant.create_collection(
+                collection_name=self.collection_name,
+                vectors_config=VectorParams(size=768, distance=Distance.COSINE),
+            )
+            print("Qdrant Cloud collection created successfully!")
+        else:
+            print("Connected to existing Qdrant Cloud collection!")
         
-        
-        self.reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+        self.all_documents = []
+        self.bm25 = None
+        self._load_existing_documents_for_bm25()
 
+    #--------------------------------------------- Loading existing docs --------------------------------------
+
+    def _load_existing_documents_for_bm25(self):
+        try:
+            records, _ = self.qdrant.scroll(
+                collection_name=self.collection_name,
+                with_payload=True,
+                with_vectors=False,  
+                limit=10000
+            )
+            if records:
+                self.all_documents = [record.payload.get("page_content", "") for record in records if record.payload]
+                tokenized_docs = [doc.lower().split() for doc in self.all_documents]
+                self.bm25 = BM25Okapi(tokenized_docs) if tokenized_docs else None
+                print(f"BM25 initialized with {len(self.all_documents)} documents from cloud.")
+        except Exception as e:
+            print(f"Error loading documents for BM25: {e}")
+
+    #------------------------------------------ Adding Documenst to cloud database -------------------------------------
+        
     def add_documents(self, chunks):
-        ids = []
-        embeddings = []
-        documents = []
-        metadatas = []
-
+        points = []
         for i, chunk in enumerate(chunks):
             try:
                 text = chunk.page_content
                 meta = chunk.metadata if isinstance(chunk.metadata, dict) else {"metadata": str(chunk.metadata)}
-                ids.append(str(uuid.uuid4()))
-                embeddings.append(self.embedding_model.encode(text).tolist())
-                documents.append(text)
-                metadatas.append(meta)
+                meta["page_content"] = text  
+                
+                result = gemini_client.models.embed_content(
+                    model=config.Embedding_model,
+                    contents=text,
+                    config={'output_dimensionality': 768}
+                )
+                vector = result.embeddings[0].values  
+                
+                point_id = str(uuid.uuid4())
+                self.all_documents.append(text)
+
+                points.append(PointStruct(id=point_id, vector=vector, payload=meta))
+                print(f"Embedded chunk {i+1}/{len(chunks)}")
+                success = True
+                time.sleep(4)
             except Exception as e:
-                print(f"document add error: {e} on position {i}")
+                if "429" in str(e):
+                    print(f"Rate limit hit at chunk {i+1}. Sleeping for 50 seconds to reset quota...")
+                    time.sleep(50)  
+                else:
+                    print(f"Error processing chunk {i}: {e}")
+                    break
 
-        try:
-            self.collection.add(
-                ids=ids,
-                embeddings=embeddings,
-                documents=documents,
-                metadatas=metadatas
-            )
-            print("Data successfully added to ChromaDB collection!!!")
-        except Exception as e:
-            print(f"Adding data to collection error: {e}")
+        
+        if points:
+            batch_size = 50
+            for i in range(0, len(points), batch_size):
+                batch = points[i:i + batch_size]
+                try:
+                    self.qdrant.upsert(
+                        collection_name=self.collection_name,
+                        points=batch
+                    )
+                    print(f"Uploaded batch {i // batch_size + 1} successfully!")
+                except Exception as e:
+                    print(f"Error uploading batch {i // batch_size + 1}: {e}")
 
-
+        
+            tokenized_docs = [doc.lower().split() for doc in self.all_documents]
+            self.bm25 = BM25Okapi(tokenized_docs)
+            print("All data successfully added to Qdrant Cloud in batches!")
+    # --------------------------------------- semantic search --------------------------------------
 
     def get_relevant_documents(self, query, top_k=3):
         try:
-            query_vector = self.embedding_model.encode(query).tolist()
-            results = self.collection.query(
-                query_embeddings=[query_vector],
-                n_results=top_k
+            
+            result = gemini_client.models.embed_content(
+                model= config.Embedding_model,
+                contents=query,
+                config={'output_dimensionality': 768}
+            )
+            query_vector = result.embeddings[0].values
+
+           
+            search_results = self.qdrant.query_points(
+                collection_name=self.collection_name,
+                query=query_vector,
+                limit=top_k
             )
 
-            if isinstance(results, dict) and 'documents' in results:
-                docs = results['documents']
-                if docs and len(docs) > 0 and docs[0]:
-                    return docs[0]
-
-            return []
+            docs = [hit.payload.get("page_content") for hit in search_results.points if hit.payload and "page_content" in hit.payload]
+            return docs
         except Exception as e:
-            print(f"Error getting the relevant documents {e}")
+            print(f"Error in vector search: {e}")
             return []
-        
+
+    #----------------------------------------- hybrid search ----------------------------------------
 
     def hybrid_search(self, query, top_k=3):
+        try:
+            # 1. Vector Search
             vector_docs = self.get_relevant_documents(query, top_k=top_k)
-    
-            combined_docs = vector_docs.copy()
-    
-            try:
-                bm25_docs = []
-                if self.bm25 and self.all_documents:
-                 tokenized_query = query.lower().split()
-                 scores = self.bm25.get_scores(tokenized_query)
-                 top_indices = np.argsort(scores)[::-1][:top_k]
-                 bm25_docs = [self.all_documents[i] for i in top_indices if scores[i] > 0]
-                 combined_docs = list(dict.fromkeys(vector_docs + bm25_docs))
-            except Exception as e:
-                print(f"Error in hybrid search {e}")
+
+            # 2. BM25 Search
+            bm25_docs = []
+            if self.bm25 and self.all_documents:
+                tokenized_query = query.lower().split()
+                scores = self.bm25.get_scores(tokenized_query)
+                top_indices = np.argsort(scores)[::-1][:top_k]
+                bm25_docs = [self.all_documents[i] for i in top_indices if scores[i] > 0]
+
+            # 3. RRF (Reciprocal Rank Fusion) - Lightweight ranking combination
+            fusion_scores = {}
+            k = 60
+
+            for rank, doc in enumerate(vector_docs):
+                if doc not in fusion_scores:
+                    fusion_scores[doc] = 0.0
+                fusion_scores[doc] += 1.0 / (k + rank + 1)
+
+            for rank, doc in enumerate(bm25_docs):
+                if doc not in fusion_scores:
+                    fusion_scores[doc] = 0.0
+                fusion_scores[doc] += 1.0 / (k + rank + 1)
+
+            sorted_docs = sorted(fusion_scores.items(), key=lambda x: x[1], reverse=True)
+            final_docs = [doc for doc, score in sorted_docs]
+
+            if not final_docs:
                 return vector_docs
-    
-            try:
-                if combined_docs:
-                    pair = [[query,doc] for doc in combined_docs]
-    
-                    rerank_score = self.reranker.predict(pair)
-    
-                    scored_docs = sorted(zip(combined_docs,rerank_score),key=lambda x: x[1],reverse=True)
-    
-                    final_docs = [doc for doc,score in scored_docs]
-    
-                    return final_docs[:top_k]
-            except Exception as e:
-                print(f"Error in re-ranking is {e}")
-                return combined_docs[:top_k]
-    
-    
+
+            return final_docs[:top_k]
+
+        except Exception as e:
+            print(f"Error in hybrid search: {e}")
+            return self.get_relevant_documents(query, top_k=top_k)
+
