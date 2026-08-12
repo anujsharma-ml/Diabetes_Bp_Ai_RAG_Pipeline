@@ -176,7 +176,7 @@ class RagPipeline:
 
     #----------------------------------------- hybrid search ----------------------------------------
 
-    def hybrid_search(self, query, top_k=3):
+    def hybrid_search(self, query, top_k=5):
         try:
             # 1. Vector Search
             vector_docs = self.get_relevant_documents(query, top_k=top_k)

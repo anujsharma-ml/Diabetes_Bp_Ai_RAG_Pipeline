@@ -14,3 +14,4 @@ google-genai
 qdrant-client
 rank-bm25
 numpy
+
