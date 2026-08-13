@@ -1,6 +1,6 @@
 # MediPulse AI | Clinical Intelligence Assistant
 
-> **Live Application Link:**: https://diabetesbpairagpipeline-yw5tb8cd6szoyktzqbi2mn.streamlit.app/
+> **Live Application Link:**: [https://diabetesbpairagpipeline-egnh5crjjtbher5eczhmwx.streamlit.app/](https://diabetesbpairagpipeline-egnh5crjjtbher5eczhmwx.streamlit.app/)
 
 ## 🚀 Overview
 **MediPulse AI** is a specialized, production-ready RAG (Retrieval-Augmented Generation) web application designed to act as an elite medical clinical assistant. It focuses exclusively on **Diabetes** and **Blood Pressure (Hypertension/Hypotension)** management, utilizing advanced hybrid search, strict domain guardrails, and real-time streaming responses.
