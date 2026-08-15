@@ -9,6 +9,6 @@ Groq_api_key = os.getenv("GROQ_API_KEY")
 
 file_path = ["./data/diabetes.pdf","./data/hypertension.pdf","./data/bp_treatment.pdf","./data/icmr_guidline.pdf"]
 
-Groq_model = "llama-3.1-8b-instant"
+Groq_model = "openai/gpt-oss-120b"
 
 Embedding_model = "gemini-embedding-2"
