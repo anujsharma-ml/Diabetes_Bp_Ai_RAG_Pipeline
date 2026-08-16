@@ -10,7 +10,7 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Elite Recruiter-Winning CSS (Compact Vercel / Linear Aesthetic) ---
+# --- Elite Eye-Friendly Responsive CSS with Visible 3D Blood Vessel Animation ---
 st.markdown("""
     <style>
         /* Hide Default Streamlit Elements */
@@ -18,26 +18,79 @@ st.markdown("""
         header {visibility: hidden;}
         footer {visibility: hidden;}
 
-        /* Matte Obsidian Vercel Theme */
+        /* Matte Obsidian Base Theme */
         .stApp {
-            background: #09090B;
-            color: #F4F4F5;
+            background: #040406 !important;
+            color: #F4F4F5 !important;
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
 
-        /* Compact Top Workspace Navbar */
+        /* --- 3D Glowing Blood Vessel & Pulse Background Animation --- */
+        .stApp::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: 
+                radial-gradient(circle at 15% 25%, rgba(239, 68, 68, 0.12) 0%, transparent 50%),
+                radial-gradient(circle at 85% 75%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(139, 92, 246, 0.05) 0%, transparent 60%);
+            z-index: 0;
+            pointer-events: none;
+            animation: ambientGlow 8s ease-in-out infinite alternate;
+        }
+
+        @keyframes ambientGlow {
+            0% { transform: scale(1); opacity: 0.8; }
+            100% { transform: scale(1.05); opacity: 1; }
+        }
+
+        /* Prominent 3D Flowing Blood Vessel / Pulse Wave Animation */
+        .stApp::after {
+            content: "";
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 200vw;
+            height: 220px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 140" preserveAspectRatio="none"><path d="M0,30 C150,110 350,-20 500,50 C650,120 950,10 1200,70 L1200,140 L0,140 Z" fill="rgba(239, 68, 68, 0.07)"/><path d="M0,60 C200,10 400,130 600,60 C800,-10 1000,110 1200,40 L1200,140 L0,140 Z" fill="rgba(59, 130, 246, 0.04)"/></svg>') repeat-x;
+            background-size: 50% 140px;
+            animation: vesselFlow 12s linear infinite;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        @keyframes vesselFlow {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        /* Fix Streamlit Container Layering over Background */
+        .main .block-container {
+            position: relative;
+            z-index: 2;
+            max-width: 800px;
+            padding-top: 1.5rem;
+            padding-bottom: 3rem;
+        }
+
+        /* Fully Responsive Top Workspace Navbar */
         .workspace-header {
-            background: rgba(17, 17, 19, 0.85);
+            background: rgba(12, 12, 16, 0.85);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            padding: 12px 20px;
+            padding: clamp(10px, 2vw, 14px) clamp(16px, 3vw, 22px);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: space-between;
             margin-bottom: 16px;
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            width: 100%;
+            box-sizing: border-box;
         }
 
         .header-brand {
@@ -47,18 +100,18 @@ st.markdown("""
         }
 
         .brand-icon {
-            width: 34px;
-            height: 34px;
-            background: linear-gradient(135deg, #8B5CF6 0%, #3B82F6 100%);
-            border-radius: 9px;
+            width: clamp(32px, 4vw, 38px);
+            height: clamp(32px, 4vw, 38px);
+            background: linear-gradient(135deg, #EF4444 0%, #3B82F6 100%);
+            border-radius: 10px;
             display: flex;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.35);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.4);
         }
 
         .brand-text h2 {
-            font-size: 0.95rem;
+            font-size: clamp(0.88rem, 2vw, 1rem);
             font-weight: 700;
             color: #FAFAFA;
             margin: 0;
@@ -66,109 +119,114 @@ st.markdown("""
         }
 
         .brand-text p {
-            font-size: 0.7rem;
+            font-size: clamp(0.65rem, 1.5vw, 0.72rem);
             color: #A1A1AA;
             margin: 0;
         }
 
-        /* Live Status Badge */
+        /* Red Pulsing LIVE Status Badge */
         .status-badge {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: rgba(16, 185, 129, 0.1);
-            border: 1px solid rgba(16, 185, 129, 0.25);
-            padding: 4px 10px;
+            background: rgba(239, 68, 68, 0.15);
+            border: 1px solid rgba(239, 68, 68, 0.35);
+            padding: 5px 12px;
             border-radius: 20px;
-            font-size: 0.72rem;
-            color: #34D399;
-            font-weight: 500;
+            font-size: clamp(0.68rem, 1.5vw, 0.75rem);
+            color: #F87171;
+            font-weight: 700;
+            letter-spacing: 0.5px;
         }
 
         .status-dot {
-            width: 5px;
-            height: 5px;
-            background-color: #34D399;
+            width: 6px;
+            height: 6px;
+            background-color: #EF4444;
             border-radius: 50%;
-            box-shadow: 0 0 6px #34D399;
-            animation: pulse 2s infinite;
+            box-shadow: 0 0 8px #EF4444;
+            animation: redPulse 1.5s infinite;
         }
 
-        @keyframes pulse {
-            0% { transform: scale(0.95); opacity: 0.8; }
-            50% { transform: scale(1.2); opacity: 1; box-shadow: 0 0 10px #34D399; }
-            100% { transform: scale(0.95); opacity: 0.8; }
+        @keyframes redPulse {
+            0% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 2px #EF4444; }
+            50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 10px #EF4444; }
+            100% { transform: scale(0.9); opacity: 0.6; box-shadow: 0 0 2px #EF4444; }
         }
 
-        /* Compact Welcome Hero Card */
+        /* Responsive Welcome Hero Card */
         .dashboard-welcome {
-            background: linear-gradient(145deg, rgba(24, 24, 27, 0.7) 0%, rgba(17, 17, 19, 0.9) 100%);
+            background: linear-gradient(145deg, rgba(18, 18, 24, 0.85) 0%, rgba(8, 8, 12, 0.95) 100%);
             border: 1px solid rgba(255, 255, 255, 0.08);
             border-radius: 14px;
-            padding: 24px 20px;
+            padding: clamp(20px, 4vw, 28px) clamp(16px, 3vw, 24px);
             text-align: center;
-            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
             margin-bottom: 16px;
         }
 
         .dashboard-welcome h1 {
-            font-size: 1.35rem;
+            font-size: clamp(1.15rem, 3vw, 1.45rem);
             font-weight: 700;
             color: #FAFAFA;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
         }
 
         .dashboard-welcome p {
-            font-size: 0.85rem;
+            font-size: clamp(0.8rem, 2vw, 0.88rem);
             color: #A1A1AA;
-            max-width: 500px;
+            max-width: 520px;
             margin: 0 auto;
-            line-height: 1.4;
+            line-height: 1.5;
         }
 
         /* Suggestion Grid Buttons */
         div.stButton > button {
+            width: 100% !important;
             border-radius: 10px !important;
             border: 1px solid rgba(255, 255, 255, 0.08) !important;
-            background: #18181B !important;
+            background: #111115 !important;
             color: #D4D4D8 !important;
-            padding: 10px 14px !important;
-            font-size: 0.82rem !important;
+            padding: clamp(8px, 2vw, 12px) 14px !important;
+            font-size: clamp(0.78rem, 1.8vw, 0.85rem) !important;
             transition: all 0.2s ease !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
         }
 
         div.stButton > button:hover {
-            border-color: #8B5CF6 !important;
-            background: rgba(139, 92, 246, 0.12) !important;
+            border-color: #EF4444 !important;
+            background: rgba(239, 68, 68, 0.12) !important;
             color: #FFFFFF !important;
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 14px rgba(239, 68, 68, 0.25);
         }
 
-        /* Chat Message Bubbles */
+        /* Responsive Chat Message Bubbles */
         .stChatMessage[data-testid="stChatMessage-user"] {
-            background: linear-gradient(135deg, #7C3AED 0%, #6366F1 100%) !important;
-            border-radius: 12px 12px 4px 12px !important;
-            padding: 12px 16px;
+            background: linear-gradient(135deg, #DC2626 0%, #B91C1C 100%) !important;
+            border-radius: 14px 14px 4px 14px !important;
+            padding: clamp(10px, 2vw, 14px) clamp(12px, 2.5vw, 18px);
             color: #FFFFFF !important;
-            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.2);
-            max-width: 75%;
+            box-shadow: 0 4px 16px rgba(220, 38, 38, 0.3);
+            max-width: 85%;
             margin-left: auto !important;
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
         
         .stChatMessage[data-testid="stChatMessage-user"] p,
         .stChatMessage[data-testid="stChatMessage-user"] span {
             color: #FFFFFF !important;
+            font-size: clamp(0.85rem, 2vw, 0.94rem) !important;
         }
 
         .stChatMessage[data-testid="stChatMessage-assistant"] {
-            background: #121215 !important;
-            border-radius: 12px 12px 12px 4px !important;
-            padding: 16px !important;
+            background: #0D0D11 !important;
+            border-radius: 14px 14px 14px 4px !important;
+            padding: clamp(12px, 2.5vw, 18px) !important;
             color: #F4F4F5 !important;
-            border: 1px solid rgba(139, 92, 246, 0.25) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4) !important;
-            max-width: 80%;
+            border: 1px solid rgba(239, 68, 68, 0.25) !important;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.6) !important;
+            max-width: 90%;
             margin-right: auto !important;
         }
         
@@ -176,35 +234,37 @@ st.markdown("""
         .stChatMessage[data-testid="stChatMessage-assistant"] li,
         .stChatMessage[data-testid="stChatMessage-assistant"] span {
             color: #E4E4E7 !important;
-            font-size: 0.92rem !important;
-            line-height: 1.5 !important;
+            font-size: clamp(0.85rem, 2vw, 0.94rem) !important;
+            line-height: 1.6 !important;
         }
 
-        /* Chat Input Box Styling */
+        /* --- Sleek Custom Chat Input Box --- */
         div[data-testid="stChatInputContainer"] {
-            background: #09090B !important;
-            padding-bottom: 10px !important;
-            max-width: 780px !important;
+            background: rgba(4, 4, 6, 0.9) !important;
+            backdrop-filter: blur(12px);
+            padding: 10px 0 16px 0 !important;
+            width: 100% !important;
+            max-width: 800px !important;
             margin: 0 auto !important;
         }
 
         div[data-testid="stChatInput"] {
-            background-color: #121215 !important;
-            border-radius: 12px !important;
-            border: 1px solid rgba(139, 92, 246, 0.4) !important;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5) !important;
-            padding: 2px 6px !important;
+            background-color: #0D0D11 !important;
+            border-radius: 14px !important;
+            border: 1px solid rgba(239, 68, 68, 0.4) !important;
+            box-shadow: 0 6px 24px rgba(0, 0, 0, 0.7) !important;
+            padding: 4px 10px !important;
             transition: all 0.3s ease !important;
         }
 
         div[data-testid="stChatInput"]:focus-within {
-            border-color: #8B5CF6 !important;
-            box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25), 0 6px 24px rgba(0, 0, 0, 0.7) !important;
+            border-color: #EF4444 !important;
+            box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.25), 0 8px 30px rgba(0, 0, 0, 0.9) !important;
         }
 
         div[data-testid="stChatInput"] textarea {
             color: #F4F4F5 !important;
-            font-size: 0.92rem !important;
+            font-size: clamp(0.88rem, 2vw, 0.95rem) !important;
             background: transparent !important;
             border: none !important;
             outline: none !important;
@@ -216,27 +276,28 @@ st.markdown("""
         }
 
         div[data-testid="stChatInput"] button {
-            background: linear-gradient(135deg, #8B5CF6 0%, #6366F1 100%) !important;
+            background: linear-gradient(135deg, #EF4444 0%, #DC2626 100%) !important;
             border: none !important;
-            border-radius: 8px !important;
+            border-radius: 10px !important;
             color: #FFFFFF !important;
             transition: all 0.2s ease !important;
         }
 
         div[data-testid="stChatInput"] button:hover {
-            opacity: 0.9 !important;
-            transform: scale(1.05);
+            opacity: 0.95 !important;
+            transform: scale(1.06);
+            box-shadow: 0 0 12px rgba(239, 68, 68, 0.5);
         }
 
         /* Professional Footer Section */
         .app-footer {
             text-align: center;
-            padding: 16px 12px;
-            font-size: 0.75rem;
+            padding: 20px 12px;
+            font-size: clamp(0.7rem, 1.5vw, 0.78rem);
             color: #71717A;
             border-top: 1px solid rgba(255, 255, 255, 0.05);
-            margin-top: 30px;
-            line-height: 1.4;
+            margin-top: 32px;
+            line-height: 1.5;
         }
     </style>
 """, unsafe_allow_html=True)
@@ -244,7 +305,7 @@ st.markdown("""
 # --- Backend API Connection Configuration ---
 BACKEND_URL = os.getenv("API_BASE_URL", "http://localhost:8000")
 
-# --- Custom Image URLs (Icons provided by user) ---
+# --- Custom Image URLs ---
 USER_AVATAR_URL = "https://img.icons8.com/?size=100&id=EllnQXZglUAE&format=png&color=000000"
 DOCTOR_AI_AVATAR_URL = "https://img.icons8.com/?size=100&id=DHJCUP779OXh&format=png&color=000000"
 
@@ -271,7 +332,7 @@ st.markdown("""
         </div>
         <div class="status-badge">
             <div class="status-dot"></div>
-            <span>Online</span>
+            <span>LIVE</span>
         </div>
     </div>
 """, unsafe_allow_html=True)
