@@ -1,3 +1,4 @@
+# rag_core.py
 import os
 import config
 import uuid
@@ -9,9 +10,10 @@ from google import genai
 from qdrant_client import QdrantClient  
 from qdrant_client.http.models import Distance, VectorParams, PointStruct  
 from rank_bm25 import BM25Okapi  
+from flashrank import Ranker, RerankRequest
 
-
-gemini_client = genai.Client(api_key=config.Gemini_api_key ) #gemini client for embedding
+# Initialize Gemini Client for Embeddings
+gemini_client = genai.Client(api_key=config.Gemini_api_key)
 
 # ------------------------------------------ 1. File Loader -----------------------------------------------
 def file_loader(files):
@@ -26,23 +28,20 @@ def file_loader(files):
                 elif path.endswith(".txt"):
                     loader = TextLoader(path)
                 else:
-                    print(f"skipping the unsupported file {os.path.basename(path)}")
+                    print(f"Skipping unsupported file: {os.path.basename(path)}")
                     continue
 
                 docs = loader.load()
                 all_docs.extend(docs)
-                print(f"The {os.path.basename(path)} is loaded successfully...")
+                print(f"Successfully loaded {os.path.basename(path)}...")
             except Exception as e:
-                print(f"Error loading the file {e}")
+                print(f"Error loading file {path}: {e}")
         else:
-            print(f"file path not found!!!!: {path}")
+            print(f"File path not found: {path}")
     return all_docs
 
 
-
-
-# --- -------------------------------------2. Chunks Splitter ---------------------------------------------------
-
+# ------------------------------------------ 2. Chunks Splitter -------------------------------------------
 def chunks_splitter(documents, chunk_size=3000, chunk_overlap=300):
     try:
         text_splitter = RecursiveCharacterTextSplitter(
@@ -50,18 +49,16 @@ def chunks_splitter(documents, chunk_size=3000, chunk_overlap=300):
             chunk_overlap=chunk_overlap
         )
         chunks = text_splitter.split_documents(documents)
-        print(f"The chunks created succesfully and the number of chunks is {len(chunks)}")
+        print(f"Chunks created successfully! Total chunks: {len(chunks)}")
         return chunks
     except Exception as e:
-        print(f"Error splitting the documents {e}")
+        print(f"Error splitting documents: {e}")
         return []
 
 
-
-
-# ----------------------------------------------------- 3. RagPipeline Class -------------------------------------------
+# ------------------------------------------ 3. RagPipeline Class -----------------------------------------
 class RagPipeline:
-    def __init__(self,):
+    def __init__(self):
         self.qdrant = QdrantClient(
             url=config.Qdrant_url,
             api_key=config.Qdrant_api_key
@@ -73,34 +70,15 @@ class RagPipeline:
                 collection_name=self.collection_name,
                 vectors_config=VectorParams(size=768, distance=Distance.COSINE),
             )
-            print("Qdrant Cloud collection created successfully!")
+            print("Created new Qdrant Cloud collection!")
         else:
             print("Connected to existing Qdrant Cloud collection!")
         
-        self.all_documents = []
-        self.bm25 = None
-        self._load_existing_documents_for_bm25()
+        # CPU-Optimized Ultra Light Cross-Encoder Reranker
+        print("Initializing FlashRank Reranker...")
+        self.reranker = Ranker(model_name="ms-marco-TinyBERT-L-2-v2")
 
-    #--------------------------------------------- Loading existing docs --------------------------------------
-
-    def _load_existing_documents_for_bm25(self):
-        try:
-            records, _ = self.qdrant.scroll(
-                collection_name=self.collection_name,
-                with_payload=True,
-                with_vectors=False,  
-                limit=10000
-            )
-            if records:
-                self.all_documents = [record.payload.get("page_content", "") for record in records if record.payload]
-                tokenized_docs = [doc.lower().split() for doc in self.all_documents]
-                self.bm25 = BM25Okapi(tokenized_docs) if tokenized_docs else None
-                print(f"BM25 initialized with {len(self.all_documents)} documents from cloud.")
-        except Exception as e:
-            print(f"Error loading documents for BM25: {e}")
-
-    #------------------------------------------ Adding Documenst to cloud database -------------------------------------
-        
+    # ------------------------------------------ Add Documents to Vector DB --------------------------------
     def add_documents(self, chunks):
         points = []
         for i, chunk in enumerate(chunks):
@@ -108,6 +86,7 @@ class RagPipeline:
                 text = chunk.page_content
                 meta = chunk.metadata if isinstance(chunk.metadata, dict) else {"metadata": str(chunk.metadata)}
                 meta["page_content"] = text  
+                meta["source"] = meta.get("source", "unknown")
                 
                 result = gemini_client.models.embed_content(
                     model=config.Embedding_model,
@@ -117,21 +96,17 @@ class RagPipeline:
                 vector = result.embeddings[0].values  
                 
                 point_id = str(uuid.uuid4())
-                self.all_documents.append(text)
-
                 points.append(PointStruct(id=point_id, vector=vector, payload=meta))
                 print(f"Embedded chunk {i+1}/{len(chunks)}")
-                success = True
-                time.sleep(4)
+                time.sleep(3)
             except Exception as e:
                 if "429" in str(e):
-                    print(f"Rate limit hit at chunk {i+1}. Sleeping for 50 seconds to reset quota...")
-                    time.sleep(50)  
+                    print(f"Rate limit hit at chunk {i+1}. Sleeping for 30 seconds...")
+                    time.sleep(30)
                 else:
                     print(f"Error processing chunk {i}: {e}")
                     break
 
-        
         if points:
             batch_size = 50
             for i in range(0, len(points), batch_size):
@@ -145,73 +120,61 @@ class RagPipeline:
                 except Exception as e:
                     print(f"Error uploading batch {i // batch_size + 1}: {e}")
 
-        
-            tokenized_docs = [doc.lower().split() for doc in self.all_documents]
-            self.bm25 = BM25Okapi(tokenized_docs)
-            print("All data successfully added to Qdrant Cloud in batches!")
-    # --------------------------------------- semantic search --------------------------------------
-
-    def get_relevant_documents(self, query, top_k=3):
+    # ------------------------------------------ Dense Vector Search ---------------------------------------
+    def get_relevant_documents(self, query, top_k=10):
         try:
-            
             result = gemini_client.models.embed_content(
-                model= config.Embedding_model,
+                model=config.Embedding_model,
                 contents=query,
                 config={'output_dimensionality': 768}
             )
             query_vector = result.embeddings[0].values
 
-           
             search_results = self.qdrant.query_points(
                 collection_name=self.collection_name,
                 query=query_vector,
                 limit=top_k
             )
 
-            docs = [hit.payload.get("page_content") for hit in search_results.points if hit.payload and "page_content" in hit.payload]
+            docs = [
+                hit.payload.get("page_content") 
+                for hit in search_results.points 
+                if hit.payload and "page_content" in hit.payload
+            ]
             return docs
         except Exception as e:
             print(f"Error in vector search: {e}")
             return []
 
-    #----------------------------------------- hybrid search ----------------------------------------
-
-    def hybrid_search(self, query, top_k=5):
+    # ------------------------------------------ Cross-Encoder Reranking -----------------------------------
+    def rerank_documents(self, query: str, docs: list[str], top_n: int = 3) -> list[str]:
+        if not docs:
+            return []
         try:
-            # 1. Vector Search
-            vector_docs = self.get_relevant_documents(query, top_k=top_k)
+            passages = [{"id": idx, "text": doc} for idx, doc in enumerate(docs)]
+            rerank_req = RerankRequest(query=query, passages=passages)
+            results = self.reranker.rerank(rerank_req)
+            
+            # Extract top N ranked texts after re-scoring
+            reranked_docs = [res["text"] for res in results[:top_n]]
+            return reranked_docs
+        except Exception as e:
+            print(f"Error in Reranking: {e}")
+            return docs[:top_n]
 
-            # 2. BM25 Search
-            bm25_docs = []
-            if self.bm25 and self.all_documents:
-                tokenized_query = query.lower().split()
-                scores = self.bm25.get_scores(tokenized_query)
-                top_indices = np.argsort(scores)[::-1][:top_k]
-                bm25_docs = [self.all_documents[i] for i in top_indices if scores[i] > 0]
+    # ------------------------------------------ Hybrid Retrieval + Rerank Pipeline ------------------------
+    def hybrid_search(self, query, top_k=3):
+        try:
+            # 1. Candidate Retrieval: Fetch top 10 relevant documents from Qdrant Cloud
+            candidate_docs = self.get_relevant_documents(query, top_k=10)
 
-            # 3. RRF (Reciprocal Rank Fusion) - Lightweight ranking combination
-            fusion_scores = {}
-            k = 60
+            if not candidate_docs:
+                return []
 
-            for rank, doc in enumerate(vector_docs):
-                if doc not in fusion_scores:
-                    fusion_scores[doc] = 0.0
-                fusion_scores[doc] += 1.0 / (k + rank + 1)
-
-            for rank, doc in enumerate(bm25_docs):
-                if doc not in fusion_scores:
-                    fusion_scores[doc] = 0.0
-                fusion_scores[doc] += 1.0 / (k + rank + 1)
-
-            sorted_docs = sorted(fusion_scores.items(), key=lambda x: x[1], reverse=True)
-            final_docs = [doc for doc, score in sorted_docs]
-
-            if not final_docs:
-                return vector_docs
-
-            return final_docs[:top_k]
+            # 2. Re-Ranking Phase: Pass candidates through FlashRank Reranker to get top 3 best matching docs
+            final_docs = self.rerank_documents(query, candidate_docs, top_n=top_k)
+            return final_docs
 
         except Exception as e:
-            print(f"Error in hybrid search: {e}")
-            return self.get_relevant_documents(query, top_k=top_k)
-
+            print(f"Error in hybrid search pipeline: {e}")
+            return self.get_relevant_documents(query, top_k=top_k) 

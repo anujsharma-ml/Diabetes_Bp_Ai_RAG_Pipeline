@@ -17,7 +17,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # ------- copy the 3 files from our local system ----------
 
-COPY backend.py rag_core.py config.py ./   
+COPY backend.py rag_core.py config.py prompt.py ./   
 
 #-------- Transffering the data file of local system into workdir data folder -------
 
