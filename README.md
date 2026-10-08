@@ -1,6 +1,6 @@
 # MediPulse AI | Clinical Intelligence Assistant
 
-> **Live Application Gateway:** [Launch MediPulse AI Web App](INSERT_YOUR_DEPLOYED_LINK_HERE)
+> **Live Application Gateway:** [Launch MediPulse AI Web App](https://diabetesbpairagpipeline-egnh5crjjtbher5eczhmwx.streamlit.app/)
 
 ---
 
