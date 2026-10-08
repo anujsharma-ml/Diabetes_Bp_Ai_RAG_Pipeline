@@ -25,12 +25,12 @@ DOCTOR_AI_AVATAR_URL = "https://img.icons8.com/?size=100&id=DHJCUP779OXh&format=
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# --- Header & Sleek Clear Chat Icon Layout ---
-col_nav, col_clear = st.columns([0.80, 0.20])
+# --- Header & Compact Dustbin Clear Icon Layout ---
+col_nav, col_clear = st.columns([0.92, 0.08], vertical_alignment="center")
 with col_nav:
     st.markdown(NAVBAR_HTML, unsafe_allow_html=True)
 with col_clear:
-    if st.button("✨ Clear", help="Reset chat workspace"):
+    if st.button("🗑️", help="Clear chat history", use_container_width=False):
         st.session_state.messages = []
         st.rerun()
 
